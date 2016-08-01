@@ -1,0 +1,294 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Lesson 4: Tree model for Classification and Regression</title><meta name="generator" content="MATLAB 8.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-10-24"><meta name="DC.source" content="Demo4_ML_Tree.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Lesson 4: Tree model for Classification and Regression</h1><!--introduction--><p>Author: Erhu Du</p><p>Supervisor: Neal Davis</p><p>University of Illinois at Urbana-Champaign</p><p>Fall 2015</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Data: Online news data from UCI</a></li><li><a href="#5">Fit a classification tree based on original dataset</a></li><li><a href="#8">Fit a classification tree after PCA</a></li><li><a href="#9">Reference</a></li></ul></div><h2>Data: Online news data from UCI<a name="1"></a></h2><p>This dataset is a summary of some articles published by Mashable. The data has 39644 rows and 61 columns (corresponding to 58 predictive attributes, 2 non-predictive attributes and 1 numerical labels about article popularity). Please refer to website (<a href="http://archive.ics.uci.edu/ml/datasets/Online+News+Popularity">http://archive.ics.uci.edu/ml/datasets/Online+News+Popularity</a>) for more information about this dataset.</p><p>Load data from PC, skip the first row and the first two columns</p><pre class="codeinput">clear <span class="string">all</span>;
+mydata = csvread(<span class="string">'data_OnlineNewsPopularity.csv'</span>, 1, 2); <span class="comment">% skip the first row and the first two columns</span>
+features = mydata(:, 1:58); <span class="comment">% all the predictive features</span>
+labels = mydata(:, 59); <span class="comment">% numerical labels</span>
+</pre><p>Here we need to transfer the original labels into binary labels. Each article should be either popular (label is more than median value, indicated by 1), or not popular (label is less than median value, indicated by 0)</p><pre class="codeinput">value = median(labels);
+id_p = find(labels &gt; median(labels)); <span class="comment">% popular articles</span>
+id_np = setdiff(1:39644, id_p); <span class="comment">% not popular</span>
+labels(id_p) = 1;
+labels(id_np) = 0;
+clear <span class="string">id_p</span> <span class="string">id_np</span> <span class="string">value</span>
+</pre><p>The names of features of this data are:</p><pre class="codeinput">featureNames = {
+     <span class="string">'n_tokens_title'</span>
+     <span class="string">'n_tokens_content'</span>
+     <span class="string">'n_unique_tokens'</span>
+     <span class="string">'n_non_stop_words'</span>
+     <span class="string">'n_non_stop_unique_tokens'</span>
+     <span class="string">'num_hrefs'</span>
+     <span class="string">'num_self_hrefs'</span>
+     <span class="string">'num_imgs'</span>
+    <span class="string">'num_videos'</span>
+    <span class="string">'average_token_length'</span>
+    <span class="string">'num_keywords'</span>
+    <span class="string">'data_channel_is_lifestyle'</span>
+    <span class="string">'data_channel_is_entertainment'</span>
+    <span class="string">'data_channel_is_bus'</span>
+    <span class="string">'data_channel_is_socmed'</span>
+    <span class="string">'data_channel_is_tech'</span>
+    <span class="string">'data_channel_is_world'</span>
+    <span class="string">'kw_min_min'</span>
+    <span class="string">'kw_max_min'</span>
+    <span class="string">'kw_avg_min'</span>
+    <span class="string">'kw_min_max'</span>
+    <span class="string">'kw_max_max'</span>
+    <span class="string">'kw_avg_max'</span>
+    <span class="string">'kw_min_avg'</span>
+    <span class="string">'kw_max_avg'</span>
+    <span class="string">'kw_avg_avg'</span>
+    <span class="string">'self_reference_min_shares'</span>
+    <span class="string">'self_reference_max_shares'</span>
+    <span class="string">'self_reference_avg_sharess'</span>
+    <span class="string">'weekday_is_monday'</span>
+    <span class="string">'weekday_is_tuesday'</span>
+    <span class="string">'weekday_is_wednesday'</span>
+    <span class="string">'weekday_is_thursday'</span>
+    <span class="string">'weekday_is_friday'</span>
+    <span class="string">'weekday_is_saturday'</span>
+    <span class="string">'weekday_is_sunday'</span>
+    <span class="string">'is_weekend'</span>
+    <span class="string">'LDA_00'</span>
+    <span class="string">'LDA_01'</span>
+    <span class="string">'LDA_02'</span>
+    <span class="string">'LDA_03'</span>
+    <span class="string">'LDA_04'</span>
+    <span class="string">'global_subjectivity'</span>
+    <span class="string">'global_sentiment_polarity'</span>
+    <span class="string">'global_rate_positive_words'</span>
+    <span class="string">'global_rate_negative_words'</span>
+    <span class="string">'rate_positive_words'</span>
+    <span class="string">'rate_negative_words'</span>
+    <span class="string">'avg_positive_polarity'</span>
+    <span class="string">'min_positive_polarity'</span>
+    <span class="string">'max_positive_polarity'</span>
+    <span class="string">'avg_negative_polarity'</span>
+    <span class="string">'min_negative_polarity'</span>
+    <span class="string">'max_negative_polarity'</span>
+    <span class="string">'title_subjectivity'</span>
+    <span class="string">'title_sentiment_polarity'</span>
+    <span class="string">'abs_title_subjectivity'</span>
+    <span class="string">'abs_title_sentiment_polarity'</span>
+    };
+</pre><h2>Fit a classification tree based on original dataset<a name="5"></a></h2><pre class="codeinput">mytree = fitctree(features, labels);
+view(mytree, <span class="string">'Mode'</span>, <span class="string">'graph'</span>);
+</pre><img vspace="5" hspace="5" src="Demo4_ML_Tree_01.png" alt=""> <p>The original tree has too much leaves. We need to prune the tree.</p><p>The best size of the tree can be found using <b>cvLoss</b> function. This will take around 15 min, you can now take a break and come back after a cup of coffee.</p><pre class="codeinput">[E1,~,~,bestlevel] = cvLoss(mytree, <span class="string">'SubTrees'</span>,<span class="string">'All'</span>,<span class="string">'TreeSize'</span>,<span class="string">'min'</span>); <span class="comment">% get best level = 136</span>
+
+plot(E1, <span class="string">'m--o'</span>)
+</pre><img vspace="5" hspace="5" src="Demo4_ML_Tree_02.png" alt=""> <p>prune the tree to its best level and visualize the pruned tree</p><pre class="codeinput">subtree = prune(mytree,<span class="string">'Level'</span>, bestlevel);
+view(subtree, <span class="string">'Mode'</span>, <span class="string">'graph'</span>)
+</pre><img vspace="5" hspace="5" src="Demo4_ML_Tree_03.png" alt=""> <h2>Fit a classification tree after PCA<a name="8"></a></h2><pre class="codeinput">feature_pca = GetPCAFeature(features, 0.85); <span class="comment">% dimension has been reduced from 58 to 23</span>
+size(feature_pca)
+mytree_pca = fitctree(feature_pca, labels);
+view(mytree_pca, <span class="string">'Mode'</span>, <span class="string">'graph'</span>);
+
+[E2,~,~,bestlevel] = cvLoss(mytree_pca, <span class="string">'SubTrees'</span>,<span class="string">'All'</span>,<span class="string">'TreeSize'</span>,<span class="string">'min'</span>); <span class="comment">% the best level is 139</span>
+plot(E2, <span class="string">'m--o'</span>)
+subtree_pca = prune(mytree_pca, <span class="string">'Level'</span>, bestlevel);
+view(subtree_pca, <span class="string">'Mode'</span>, <span class="string">'graph'</span>)
+</pre><pre class="codeoutput">
+ans =
+
+       39644          23
+
+</pre><img vspace="5" hspace="5" src="Demo4_ML_Tree_04.png" alt=""> <img vspace="5" hspace="5" src="Demo4_ML_Tree_05.png" alt=""> <img vspace="5" hspace="5" src="Demo4_ML_Tree_06.png" alt=""> <h2>Reference<a name="9"></a></h2><p>K. Fernandes, P. Vinagre and P. Cortez. A Proactive Intelligent Decision Support System for Predicting the Popularity of Online News. Proceedings of the 17th EPIA 2015 - Portuguese Conference on Artificial Intelligence, September, Coimbra, Portugal.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Lesson 4: Tree model for Classification and Regression 
+% Author: Erhu Du
+%
+% Supervisor: Neal Davis
+%
+% University of Illinois at Urbana-Champaign
+% 
+% Fall 2015 
+
+%% Data: Online news data from UCI 
+% This dataset is a summary of some articles published by Mashable. 
+% The data has 39644 rows and 61 columns (corresponding to 58 predictive attributes, 2
+% non-predictive attributes and 1 numerical labels about article popularity).
+% Please refer to website (<http://archive.ics.uci.edu/ml/datasets/Online+News+Popularity>) for more information about this dataset. 
+%
+
+%%
+% Load data from PC, skip the first row and the first two columns
+clear all;
+mydata = csvread('data_OnlineNewsPopularity.csv', 1, 2); % skip the first row and the first two columns 
+features = mydata(:, 1:58); % all the predictive features
+labels = mydata(:, 59); % numerical labels 
+%%
+% Here we need to transfer the original labels into binary labels. Each article should be either popular (label is more than median value,
+% indicated by 1), or not popular (label is less than median value, indicated by 0)
+value = median(labels);
+id_p = find(labels > median(labels)); % popular articles
+id_np = setdiff(1:39644, id_p); % not popular
+labels(id_p) = 1;
+labels(id_np) = 0;
+clear id_p id_np value
+
+%%
+% The names of features of this data are: 
+featureNames = {
+     'n_tokens_title'
+     'n_tokens_content'
+     'n_unique_tokens'
+     'n_non_stop_words'
+     'n_non_stop_unique_tokens'
+     'num_hrefs'
+     'num_self_hrefs'
+     'num_imgs'
+    'num_videos'
+    'average_token_length'
+    'num_keywords'
+    'data_channel_is_lifestyle'
+    'data_channel_is_entertainment'
+    'data_channel_is_bus'
+    'data_channel_is_socmed'
+    'data_channel_is_tech'
+    'data_channel_is_world'
+    'kw_min_min'
+    'kw_max_min'
+    'kw_avg_min'
+    'kw_min_max'
+    'kw_max_max'
+    'kw_avg_max'
+    'kw_min_avg'
+    'kw_max_avg'
+    'kw_avg_avg'
+    'self_reference_min_shares'
+    'self_reference_max_shares'
+    'self_reference_avg_sharess'
+    'weekday_is_monday'
+    'weekday_is_tuesday'
+    'weekday_is_wednesday'
+    'weekday_is_thursday'
+    'weekday_is_friday'
+    'weekday_is_saturday'
+    'weekday_is_sunday'
+    'is_weekend'
+    'LDA_00'
+    'LDA_01'
+    'LDA_02'
+    'LDA_03'
+    'LDA_04'
+    'global_subjectivity'
+    'global_sentiment_polarity'
+    'global_rate_positive_words'
+    'global_rate_negative_words'
+    'rate_positive_words'
+    'rate_negative_words'
+    'avg_positive_polarity'
+    'min_positive_polarity'
+    'max_positive_polarity'
+    'avg_negative_polarity'
+    'min_negative_polarity'
+    'max_negative_polarity'
+    'title_subjectivity'
+    'title_sentiment_polarity'
+    'abs_title_subjectivity'
+    'abs_title_sentiment_polarity'
+    };
+
+
+%% Fit a classification tree based on original dataset
+mytree = fitctree(features, labels);
+view(mytree, 'Mode', 'graph');
+
+%%
+% The original tree has too much leaves. We need to prune the tree. 
+%
+% The best size of the tree can be found using *cvLoss* function. 
+% This will take around 15 min, you can now take a
+% break and come back after a cup of coffee. 
+
+[E1,~,~,bestlevel] = cvLoss(mytree, 'SubTrees','All','TreeSize','min'); % get best level = 136
+
+plot(E1, 'mREPLACE_WITH_DASH_DASHo')
+%% 
+% prune the tree to its best level and visualize the pruned tree 
+subtree = prune(mytree,'Level', bestlevel);
+view(subtree, 'Mode', 'graph')
+
+%% Fit a classification tree after PCA
+
+feature_pca = GetPCAFeature(features, 0.85); % dimension has been reduced from 58 to 23
+size(feature_pca)
+mytree_pca = fitctree(feature_pca, labels);
+view(mytree_pca, 'Mode', 'graph');
+
+[E2,~,~,bestlevel] = cvLoss(mytree_pca, 'SubTrees','All','TreeSize','min'); % the best level is 139
+plot(E2, 'mREPLACE_WITH_DASH_DASHo')
+subtree_pca = prune(mytree_pca, 'Level', bestlevel);
+view(subtree_pca, 'Mode', 'graph')
+
+
+%% Reference
+% K. Fernandes, P. Vinagre and P. Cortez. A Proactive Intelligent Decision Support System for Predicting the Popularity of Online News. Proceedings of the 17th EPIA 2015 - Portuguese Conference on Artificial Intelligence, September, Coimbra, Portugal.
+
+##### SOURCE END #####
+--></body></html>

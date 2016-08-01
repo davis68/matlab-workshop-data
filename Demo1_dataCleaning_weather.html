@@ -1,0 +1,436 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Lesson 1: Data access and data cleaning</title><meta name="generator" content="MATLAB 8.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-10-24"><meta name="DC.source" content="Demo1_dataCleaning_weather.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Lesson 1: Data access and data cleaning</h1><!--introduction--><p>Author: Erhu Du</p><p>Supervisor: Neal Davis</p><p>University of Illinois at Urbana-Champaign</p><p>Fall 2015</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Data description and data access</a></li><li><a href="#2">Data cleaning</a></li><li><a href="#7">Basic statistical analysis</a></li><li><a href="#10">Data smoothing</a></li><li><a href="#14">Correlation between different variables</a></li></ul></div><h2>Data description and data access<a name="1"></a></h2><p>The data used in this tutorial is weather data of Coleto Creek Reservoir from 2003 to 2014. The data is requested from NOAA (<a href="http://www.noaa.gov/">http://www.noaa.gov/</a>), including 4197 daily weather observations of evaporationtranspiration, precipitation, maximum temperature, minimum temperature. The colum of the data is [Latitude, Longitude, Date, ET, Prcp,  Tmax, Tmin].</p><p>To access the data from PC, we can use <b>textread</b> function:</p><pre class="codeinput">clear <span class="string">all</span>
+mydata = textread(<span class="string">'data_ColetoCreek.csv'</span>, <span class="string">''</span>, <span class="string">'delimiter'</span>, <span class="string">','</span>,<span class="string">'emptyvalue'</span>, NaN,<span class="string">'headerlines'</span>,1);
+colname = {<span class="string">'Latitude'</span>, <span class="string">'Longitude'</span>, <span class="string">'Date'</span>, <span class="string">'ET'</span>, <span class="string">'Precip'</span>,<span class="string">'Tmax'</span>,<span class="string">'Tmin'</span>};
+</pre><h2>Data cleaning<a name="2"></a></h2><p>A lot of the raw data have missing value and outliers. In this tutorial, we will focuse on Tmax and Tmin data to demonstrate how to clean missing values and outliers. Firstly, we want to see the distribution of Tmax and Tmin.</p><pre class="codeinput">figure(1);
+hist(mydata(:, 6:7));
+xlabel(<span class="string">'Temperature'</span>);
+ylabel(<span class="string">'Number of occurence'</span>);
+legend({<span class="string">'Tmax'</span>, <span class="string">'Tmin'</span>}, <span class="string">'Location'</span>,<span class="string">'northwest'</span>);
+</pre><img vspace="5" hspace="5" src="Demo1_dataCleaning_weather_01.png" alt=""> <p>The missing values in this dataset are represented by '-9999'. We need to remove the rows with '-9999'.</p><pre class="codeinput">outlierID_Prcp = find(mydata(:, 5) == -9999); <span class="comment">% get the row number of missing data (outlier)</span>
+outlierID_Tmax = find(mydata(:, 6) == -9999);
+outlierID_Tmin = find(mydata(:, 7) == -9999);
+outlierID = [outlierID_Prcp; outlierID_Tmax; outlierID_Tmin];
+mydata = mydata(setdiff(1:4197, outlierID), :); <span class="comment">% 'mydata' is the dataset without missing values</span>
+clear <span class="string">outlierID_Prcp</span> <span class="string">outlierID_Tmax</span> <span class="string">outlierID_Tmin</span> <span class="string">outlierID</span>
+</pre><p>Naturally, Tmax should be larger than Tmin for each day. However, we might see that some of the min temperature is larger than max temperature in this dataset. We can simply shift Tmax and Tmin for these observations.</p><pre class="codeinput">ids = find(mydata(:, 6) &lt; mydata(:, 7)); <span class="comment">% find all the rows where Tmax &lt; Tmin</span>
+<span class="keyword">for</span> i = 1:length(ids)
+    value = mydata(ids(i), 6);
+    mydata(ids(i), 6) = mydata(ids(i), 7);
+    mydata(ids(i), 7) = value;
+<span class="keyword">end</span>
+</pre><p>Plot the histogram of temperature data again</p><pre class="codeinput">figure(2);
+hist(mydata(:, 6:7)/10);
+xlabel(<span class="string">'Temperature (C)'</span>);
+ylabel(<span class="string">'Number of occurence'</span>);
+legend({<span class="string">'Tmax'</span>, <span class="string">'Tmin'</span>}, <span class="string">'Location'</span>,<span class="string">'northwest'</span>);
+</pre><img vspace="5" hspace="5" src="Demo1_dataCleaning_weather_02.png" alt=""> <p>Time series and boxplot</p><pre class="codeinput">figure(3);
+timeSeries = 1:4144;
+plot(timeSeries, mydata(:, 6)/10, timeSeries, mydata(:, 7)/10)
+title(<span class="string">'Temperature'</span>)
+xlabel(<span class="string">'Time series'</span>)
+ylabel(<span class="string">'Temperature (C)'</span>)
+legend({<span class="string">'Tmax'</span>, <span class="string">'Tmin'</span>})
+clear <span class="string">timeSeries</span>
+
+figure(4)
+boxplot(mydata(:, 6:7)./10, {<span class="string">'Tmax'</span> <span class="string">'Tmin'</span>})
+ylabel(<span class="string">'Temperature (C)'</span>)
+clear <span class="string">i</span> <span class="string">ids</span> <span class="string">value</span>
+</pre><img vspace="5" hspace="5" src="Demo1_dataCleaning_weather_03.png" alt=""> <img vspace="5" hspace="5" src="Demo1_dataCleaning_weather_04.png" alt=""> <h2>Basic statistical analysis<a name="7"></a></h2><p>In this section, we will show you how to perform some basic statistical analysis of the dataset. Select year 2008 as an example.</p><pre class="codeinput">YEAR = 2008;
+<span class="comment">% get row numbers of year 2008</span>
+ids = intersect(find(mydata(:, 3) &lt; (YEAR+1)*10000),  find(mydata(:, 3) &gt; YEAR*10000));
+mydata_year = mydata(ids, :);
+Tmax = mydata_year(:, 6)/10;
+Tmin = mydata_year(:, 7)/10;
+ET = mydata_year(:, 5);
+
+figure(5)
+day = 1:365;
+plot(day,Tmax, <span class="string">'--'</span>, day, Tmin, <span class="string">'-'</span>);
+legend({<span class="string">'Tmax'</span> <span class="string">'Tmin'</span>});
+xlabel(<span class="string">'Time series in year 2008 (day)'</span>)
+ylabel(<span class="string">'Temperature (C)'</span>);
+</pre><img vspace="5" hspace="5" src="Demo1_dataCleaning_weather_05.png" alt=""> <p>Find the hotest and the coldest day in this year</p><pre class="codeinput">[MaxTemperature hotestDay] = max(Tmax) <span class="comment">% Maximum temperature in year 2008</span>
+[MinTemperature coldestDay] = min(Tmin) <span class="comment">% Minimum temperature in year 2008</span>
+</pre><pre class="codeoutput">
+MaxTemperature =
+
+   39.4000
+
+
+hotestDay =
+
+   257
+
+
+MinTemperature =
+
+   -2.2000
+
+
+coldestDay =
+
+     3
+
+</pre><p>We can also find the days in which the maximum temperature exceeds 35 C.</p><pre class="codeinput">id = find(Tmax &gt; 35); <span class="comment">% maximum temperature exceeds 35 C</span>
+bar(id, Tmax(id), <span class="string">'m'</span>);
+xlabel(<span class="string">'day'</span>)
+ylabel(<span class="string">'Temperature (C)'</span>)
+title(<span class="string">'Max temperature exceeds 35 C'</span>)
+</pre><img vspace="5" hspace="5" src="Demo1_dataCleaning_weather_06.png" alt=""> <h2>Data smoothing<a name="10"></a></h2><p>Data smoothing is an important way to see the general patterns associated with dataset. In this section, we will be introduce several data smoothing functions in matlab.</p><p>y_s = smooth(y, span, method) % method could be 'moving' 'lowess' 'loess' 'sgolay' 'rlowess' 'rloess'</p><p>first, let use the default smoothing method: 'moving'</p><pre class="codeinput"><span class="comment">% y_s = smooth(y, span) % span must be an odd number, 5 by default. The</span>
+<span class="comment">% smoothed data become more smooth as the value of span is increased.</span>
+Tmax_s1 = smooth(Tmax); <span class="comment">% by default, span = 5</span>
+Tmax_s2 = smooth(Tmax, 17); <span class="comment">% span = 17</span>
+
+figure(6)
+plot(day, Tmax, <span class="string">'k.'</span>);
+hold <span class="string">on</span>
+plot(day, Tmax_s1, <span class="string">'g--'</span>, <span class="string">'LineWidth'</span>, 2);
+hold <span class="string">on</span>
+plot(day, Tmax_s2, <span class="string">'m-'</span>,  <span class="string">'LineWidth'</span>, 2);
+legend({<span class="string">'Original data'</span> <span class="string">'smooth data (span = 5)'</span>, <span class="string">'smooth data (span = 17)'</span>});
+xlabel(<span class="string">'Time series in year 2008 (day)'</span>)
+ylabel(<span class="string">'Temperature (C)'</span>)
+hold <span class="string">off</span>;
+</pre><img vspace="5" hspace="5" src="Demo1_dataCleaning_weather_07.png" alt=""> <p>secondly, we will use local regression method to smooth the data</p><pre class="codeinput">figure(7)
+Tmax_s3 = smooth(Tmax, 0.1 ,<span class="string">'loess'</span>);
+Tmax_s4 = smooth(Tmax, 0.2 ,<span class="string">'loess'</span>);
+Tmax_s5 = smooth(Tmax, 0.5 ,<span class="string">'loess'</span>);
+plot(day, Tmax, <span class="string">'k.'</span>);
+hold <span class="string">on</span>
+plot(day, Tmax_s3, <span class="string">'g--'</span>, <span class="string">'LineWidth'</span>, 2);
+hold <span class="string">on</span>
+plot(day, Tmax_s4, <span class="string">'m--'</span>, <span class="string">'LineWidth'</span>, 2);
+hold <span class="string">on</span>
+plot(day, Tmax_s5, <span class="string">'k--'</span>, <span class="string">'LineWidth'</span>, 2);
+legend({<span class="string">'Original data'</span> <span class="string">'span = 0.1'</span> <span class="string">'span = 0.2'</span> <span class="string">'span = 0.5'</span>});
+xlabel(<span class="string">'Time series in year 2008 (day)'</span>)
+ylabel(<span class="string">'Temperature (C)'</span>)
+title(<span class="string">'Local regression method for data smoothing'</span>)
+hold <span class="string">off</span>
+</pre><img vspace="5" hspace="5" src="Demo1_dataCleaning_weather_08.png" alt=""> <p>Now, we can compare the original data with smoothed data for both Tmax and Tmin</p><pre class="codeinput">figure(8)
+Tmin_s3 = smooth(Tmin, 0.1 ,<span class="string">'loess'</span>);
+plot(day, Tmax, <span class="string">'k.'</span>);
+hold <span class="string">on</span>
+plot(day, Tmin, <span class="string">'b.'</span>);
+hold <span class="string">on</span>
+plot(day, Tmax_s3, <span class="string">'r--'</span>, <span class="string">'LineWidth'</span>, 2);
+hold <span class="string">on</span>
+plot(day, Tmin_s3, <span class="string">'m--'</span>, <span class="string">'LineWidth'</span>, 2);
+legend({<span class="string">'Tmax'</span> <span class="string">'Tmin'</span> <span class="string">'Tmax(smoothed)'</span> <span class="string">'Tmin(smoothed)'</span>});
+xlabel(<span class="string">'Time series in year 2008 (day)'</span>)
+ylabel(<span class="string">'Temperature (C)'</span>)
+title(<span class="string">'Data Smoothing Comparison'</span>)
+hold <span class="string">off</span>
+</pre><img vspace="5" hspace="5" src="Demo1_dataCleaning_weather_09.png" alt=""> <h2>Correlation between different variables<a name="14"></a></h2><p>Correlation can help us understand the relationship between different variables. For variable X and Y, correlation (<img src="Demo1_dataCleaning_weather_eq20099.png" alt="$\rho$">) can be computered as:</p><p><img src="Demo1_dataCleaning_weather_eq48688.png" alt="$$ \rho_{X, Y} = \frac{ E[[X- \mu_x][Y- \mu_y]]}{\sigma_x \sigma_y} $$"></p><p>Firstly, let see the correlation of maximum temperature, minumim temperature and ET</p><pre class="codeinput">figure(9)
+corrplot([Tmax Tmin ET], <span class="string">'varNames'</span>, {<span class="string">'Tmax'</span> <span class="string">'Tmin'</span> <span class="string">'ET'</span>})
+</pre><img vspace="5" hspace="5" src="Demo1_dataCleaning_weather_10.png" alt=""> <img vspace="5" hspace="5" src="Demo1_dataCleaning_weather_11.png" alt=""> <p>Tmax and Tmin are more related with each other, while they are not related with ET.</p><p>Now we want to see if Tmax of current day is related with Tmax of other days.</p><pre class="codeinput">Tm0 = Tmax(1:(length(Tmax)-5)); <span class="comment">% Tmax of current day</span>
+Tm1 = Tmax(2:(length(Tmax)-4)); <span class="comment">% Tmax of tomorrow</span>
+Tm2 = Tmax(3:(length(Tmax)-3)); <span class="comment">% ...</span>
+Tm3 = Tmax(4:(length(Tmax)-2));
+Tm4 = Tmax(5:(length(Tmax)-1));
+figure(10)
+corrplot([Tm0 Tm1 Tm2 Tm3], <span class="string">'varNames'</span>, {<span class="string">'Tm0'</span> <span class="string">'Tm1'</span> <span class="string">'Tm2'</span> <span class="string">'Tm3'</span>})
+</pre><img vspace="5" hspace="5" src="Demo1_dataCleaning_weather_12.png" alt=""> <p>Tmax become less related with each other as time lag increases.</p><pre class="codeinput">figure(11)
+x = (1:335)';
+<span class="keyword">for</span> i = 1:30
+    x = [x Tmax(i:(length(Tmax)-31+i))];
+<span class="keyword">end</span>
+x = x(:, 2:end);
+R = corrcoef(x);
+correlation = R(1, :);
+plot(correlation, <span class="string">'k+'</span>);
+xlabel(<span class="string">'Time lag (day)'</span>)
+ylabel(<span class="string">'Correlation'</span>)
+</pre><img vspace="5" hspace="5" src="Demo1_dataCleaning_weather_13.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Lesson 1: Data access and data cleaning
+% Author: Erhu Du
+%
+% Supervisor: Neal Davis
+%
+% University of Illinois at Urbana-Champaign
+% 
+% Fall 2015 
+
+%% Data description and data access
+% The data used in this tutorial is weather data of Coleto Creek Reservoir
+% from 2003 to 2014. The data is requested from NOAA
+% (http://www.noaa.gov/), including 4197 daily weather observations of
+% evaporationtranspiration, precipitation, maximum temperature, minimum
+% temperature. The colum of the data is [Latitude, Longitude, Date, ET,
+% Prcp,  Tmax, Tmin]. 
+% 
+% To access the data from PC, we can use *textread* function:  
+
+clear all
+mydata = textread('data_ColetoCreek.csv', '', 'delimiter', ',','emptyvalue', NaN,'headerlines',1);
+colname = {'Latitude', 'Longitude', 'Date', 'ET', 'Precip','Tmax','Tmin'};
+%% Data cleaning
+% A lot of the raw data have missing value and outliers. 
+% In this tutorial, we will focuse on Tmax and Tmin data to demonstrate how to clean missing values and outliers. 
+% Firstly, we want to see the distribution of Tmax and Tmin. 
+figure(1);
+hist(mydata(:, 6:7));
+xlabel('Temperature');
+ylabel('Number of occurence');
+legend({'Tmax', 'Tmin'}, 'Location','northwest');
+
+%%
+% The missing values in this dataset are represented by '-9999'. We
+% need to remove the rows with '-9999'. 
+
+outlierID_Prcp = find(mydata(:, 5) == -9999); % get the row number of missing data (outlier)
+outlierID_Tmax = find(mydata(:, 6) == -9999);
+outlierID_Tmin = find(mydata(:, 7) == -9999);
+outlierID = [outlierID_Prcp; outlierID_Tmax; outlierID_Tmin];
+mydata = mydata(setdiff(1:4197, outlierID), :); % 'mydata' is the dataset without missing values 
+clear outlierID_Prcp outlierID_Tmax outlierID_Tmin outlierID
+
+%%
+% Naturally, Tmax should be larger than Tmin for each day. However, we
+% might see that some of the min temperature is larger than max temperature in this dataset. 
+% We can simply shift Tmax and Tmin for these observations. 
+
+ids = find(mydata(:, 6) < mydata(:, 7)); % find all the rows where Tmax < Tmin
+for i = 1:length(ids)
+    value = mydata(ids(i), 6);
+    mydata(ids(i), 6) = mydata(ids(i), 7);
+    mydata(ids(i), 7) = value;
+end
+
+%% 
+% Plot the histogram of temperature data again 
+figure(2);
+hist(mydata(:, 6:7)/10);
+xlabel('Temperature (C)');
+ylabel('Number of occurence');
+legend({'Tmax', 'Tmin'}, 'Location','northwest');
+
+%%
+% Time series and boxplot 
+figure(3);
+timeSeries = 1:4144;
+plot(timeSeries, mydata(:, 6)/10, timeSeries, mydata(:, 7)/10)
+title('Temperature')
+xlabel('Time series')
+ylabel('Temperature (C)')
+legend({'Tmax', 'Tmin'})
+clear timeSeries
+
+figure(4)
+boxplot(mydata(:, 6:7)./10, {'Tmax' 'Tmin'})
+ylabel('Temperature (C)')
+clear i ids value
+
+%% Basic statistical analysis 
+% In this section, we will show you how to perform some basic statistical analysis of the dataset. 
+% Select year 2008 as an example. 
+
+YEAR = 2008;
+% get row numbers of year 2008
+ids = intersect(find(mydata(:, 3) < (YEAR+1)*10000),  find(mydata(:, 3) > YEAR*10000)); 
+mydata_year = mydata(ids, :);
+Tmax = mydata_year(:, 6)/10;
+Tmin = mydata_year(:, 7)/10;
+ET = mydata_year(:, 5);
+
+figure(5)
+day = 1:365;
+plot(day,Tmax, 'REPLACE_WITH_DASH_DASH', day, Tmin, '-');
+legend({'Tmax' 'Tmin'});
+xlabel('Time series in year 2008 (day)')
+ylabel('Temperature (C)');
+
+%% 
+% Find the hotest and the coldest day in this year 
+[MaxTemperature hotestDay] = max(Tmax) % Maximum temperature in year 2008 
+[MinTemperature coldestDay] = min(Tmin) % Minimum temperature in year 2008 
+
+%% 
+% We can also find the days in which the maximum temperature exceeds 35 C. 
+id = find(Tmax > 35); % maximum temperature exceeds 35 C
+bar(id, Tmax(id), 'm');
+xlabel('day')
+ylabel('Temperature (C)')
+title('Max temperature exceeds 35 C')
+
+%% Data smoothing 
+% Data smoothing is an important way to see the general patterns associated with dataset. 
+% In this section, we will be introduce several data smoothing functions in matlab. 
+% 
+% y_s = smooth(y, span, method) % method could be 'moving' 'lowess' 'loess' 'sgolay' 'rlowess' 'rloess' 
+
+%% 
+% first, let use the default smoothing method: 'moving'
+
+% y_s = smooth(y, span) % span must be an odd number, 5 by default. The
+% smoothed data become more smooth as the value of span is increased. 
+Tmax_s1 = smooth(Tmax); % by default, span = 5
+Tmax_s2 = smooth(Tmax, 17); % span = 17
+
+figure(6)
+plot(day, Tmax, 'k.');
+hold on
+plot(day, Tmax_s1, 'gREPLACE_WITH_DASH_DASH', 'LineWidth', 2);
+hold on
+plot(day, Tmax_s2, 'm-',  'LineWidth', 2);
+legend({'Original data' 'smooth data (span = 5)', 'smooth data (span = 17)'});
+xlabel('Time series in year 2008 (day)')
+ylabel('Temperature (C)')
+hold off;
+
+%% 
+% secondly, we will use local regression method to smooth the data 
+
+figure(7)
+Tmax_s3 = smooth(Tmax, 0.1 ,'loess');
+Tmax_s4 = smooth(Tmax, 0.2 ,'loess');
+Tmax_s5 = smooth(Tmax, 0.5 ,'loess');
+plot(day, Tmax, 'k.');
+hold on
+plot(day, Tmax_s3, 'gREPLACE_WITH_DASH_DASH', 'LineWidth', 2);
+hold on
+plot(day, Tmax_s4, 'mREPLACE_WITH_DASH_DASH', 'LineWidth', 2);
+hold on
+plot(day, Tmax_s5, 'kREPLACE_WITH_DASH_DASH', 'LineWidth', 2);
+legend({'Original data' 'span = 0.1' 'span = 0.2' 'span = 0.5'});
+xlabel('Time series in year 2008 (day)')
+ylabel('Temperature (C)')
+title('Local regression method for data smoothing')
+hold off
+
+%% 
+% Now, we can compare the original data with smoothed data for both Tmax
+% and Tmin 
+
+figure(8)
+Tmin_s3 = smooth(Tmin, 0.1 ,'loess');
+plot(day, Tmax, 'k.');
+hold on
+plot(day, Tmin, 'b.');
+hold on
+plot(day, Tmax_s3, 'rREPLACE_WITH_DASH_DASH', 'LineWidth', 2);
+hold on
+plot(day, Tmin_s3, 'mREPLACE_WITH_DASH_DASH', 'LineWidth', 2);
+legend({'Tmax' 'Tmin' 'Tmax(smoothed)' 'Tmin(smoothed)'});
+xlabel('Time series in year 2008 (day)')
+ylabel('Temperature (C)')
+title('Data Smoothing Comparison')
+hold off
+
+%% Correlation between different variables 
+% Correlation can help us understand the relationship
+% between different variables. For variable X and Y, correlation ($\rho$) can be computered as: 
+%
+% $$ \rho_{X, Y} = \frac{ E[[X- \mu_x][Y- \mu_y]]}{\sigma_x \sigma_y} $$ 
+%
+% Firstly, let see the correlation of maximum temperature, minumim temperature and ET
+
+figure(9)
+corrplot([Tmax Tmin ET], 'varNames', {'Tmax' 'Tmin' 'ET'})
+
+%% 
+% Tmax and Tmin are more related with each other, while they are not
+% related with ET. 
+
+%% 
+% Now we want to see if Tmax of current day is related with Tmax of other days. 
+Tm0 = Tmax(1:(length(Tmax)-5)); % Tmax of current day 
+Tm1 = Tmax(2:(length(Tmax)-4)); % Tmax of tomorrow
+Tm2 = Tmax(3:(length(Tmax)-3)); % ... 
+Tm3 = Tmax(4:(length(Tmax)-2));
+Tm4 = Tmax(5:(length(Tmax)-1));
+figure(10)
+corrplot([Tm0 Tm1 Tm2 Tm3], 'varNames', {'Tm0' 'Tm1' 'Tm2' 'Tm3'})
+%%
+% Tmax become less related with each other as time lag increases. 
+
+figure(11)
+x = (1:335)';
+for i = 1:30
+    x = [x Tmax(i:(length(Tmax)-31+i))];
+end
+x = x(:, 2:end);
+R = corrcoef(x);
+correlation = R(1, :);
+plot(correlation, 'k+');
+xlabel('Time lag (day)')
+ylabel('Correlation')
+
+
+
+
+
+
+
+##### SOURCE END #####
+--></body></html>

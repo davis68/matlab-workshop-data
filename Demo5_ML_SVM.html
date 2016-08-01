@@ -1,0 +1,365 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Support Vector Machine</title><meta name="generator" content="MATLAB 8.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-10-24"><meta name="DC.source" content="Demo5_ML_SVM.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Support Vector Machine</h1><!--introduction--><p>Author: Erhu Du</p><p>Supervisor: Neal Davis</p><p>University of Illinois at Urbana-Champaign</p><p>Fall 2015</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Load data and select features</a></li><li><a href="#2">SVM for binary-class classification</a></li><li><a href="#4">kernel function</a></li><li><a href="#6">SVM for three-class classification</a></li><li><a href="#7">Website for more information</a></li></ul></div><h2>Load data and select features<a name="1"></a></h2><p>Data source: Wine data</p><pre class="codeinput">clear <span class="string">all</span>
+mydata = csvread(<span class="string">'data_wine_complete.csv'</span>, 1, 0);
+features = mydata(:, 2:end);
+labels = mydata(:, 1);
+figure(1)
+idFeatures = [1 7];
+XX = features(:, idFeatures);
+YY = labels;
+gscatter(XX(:,1),XX(:,2),YY);
+xlabel(<span class="string">'Achol level'</span>)
+ylabel(<span class="string">'Flavanoids'</span>)
+title(<span class="string">'Scatter Diagram of Wine Data'</span>)
+clear <span class="string">features</span> <span class="string">idFeatures</span> <span class="string">labels</span>
+</pre><img vspace="5" hspace="5" src="Demo5_ML_SVM_01.png" alt=""> <h2>SVM for binary-class classification<a name="2"></a></h2><p>prepare data, select wine type 1 and wine type 2 for SVM fitting</p><pre class="codeinput">figure(2)
+X = XX(1:130, :);
+Y = YY(1:130);
+gscatter(X(:,1), X(:,2), Y);
+xlabel(<span class="string">'Achol level'</span>)
+ylabel(<span class="string">'Flavanoids'</span>)
+title(<span class="string">'Scatter Diagram of Wine Data'</span>)
+</pre><img vspace="5" hspace="5" src="Demo5_ML_SVM_02.png" alt=""> <p>fit a SVM for classification</p><pre class="codeinput">figure(3)
+SVM = fitcsvm(X, Y,<span class="string">'Standardize'</span>,true, <span class="string">'Standardize'</span>,true);
+<span class="comment">% Compute the scores over a grid</span>
+d = 0.02; <span class="comment">% Step size of the grid</span>
+[x1Grid,x2Grid] = meshgrid(min(X(:,1)):d:max(X(:,1)),<span class="keyword">...</span>
+    min(X(:,2)):d:max(X(:,2)));
+xGrid = [x1Grid(:),x2Grid(:)];        <span class="comment">% The grid</span>
+[~,scores1] = predict(SVM,xGrid); <span class="comment">% The scores</span>
+h(1:2) = gscatter(X(:,1),X(:,2),Y);
+hold <span class="string">on</span>
+h(3) = plot(X(SVM.IsSupportVector,1),<span class="keyword">...</span>
+    X(SVM.IsSupportVector,2),<span class="string">'ko'</span>,<span class="string">'MarkerSize'</span>,10);
+    <span class="comment">% Support vectors</span>
+contour(x1Grid,x2Grid,reshape(scores1(:,2),size(x1Grid)),[0 0],<span class="string">'k'</span>, <span class="string">'LineWidth'</span>, 2);
+    <span class="comment">% Decision boundary</span>
+xlabel(<span class="string">'Achol level'</span>)
+ylabel(<span class="string">'Flavanoids'</span>)
+title(<span class="string">'SVM (linear kernel)'</span>)
+legend({<span class="string">'1'</span>,<span class="string">'2'</span>,<span class="string">'Support Vectors'</span>},<span class="string">'Location'</span>,<span class="string">'Best'</span>);
+hold <span class="string">off</span>
+</pre><img vspace="5" hspace="5" src="Demo5_ML_SVM_03.png" alt=""> <h2>kernel function<a name="4"></a></h2><p>Sometimes the data cannot be seperated by linear functions. We can use kernel functions instead. Here we choose two types of kernel functions: polynomial and gaussian kernel.</p><p>*polynomial kernel function *</p><pre class="codeinput">figure(4)
+SVM = fitcsvm(X, Y,<span class="string">'Standardize'</span>,true, <span class="string">'KernelFunction'</span>,<span class="string">'polynomial'</span>,<span class="string">'Standardize'</span>,true); <span class="comment">% polynomial, gaussian</span>
+<span class="comment">% Compute the scores over a grid</span>
+d = 0.02; <span class="comment">% Step size of the grid</span>
+[x1Grid,x2Grid] = meshgrid(min(X(:,1)):d:max(X(:,1)),<span class="keyword">...</span>
+    min(X(:,2)):d:max(X(:,2)));
+xGrid = [x1Grid(:),x2Grid(:)];        <span class="comment">% The grid</span>
+[~,scores1] = predict(SVM,xGrid); <span class="comment">% The scores</span>
+h(1:2) = gscatter(X(:,1),X(:,2),Y);
+hold <span class="string">on</span>
+h(3) = plot(X(SVM.IsSupportVector,1),<span class="keyword">...</span>
+    X(SVM.IsSupportVector,2),<span class="string">'ko'</span>,<span class="string">'MarkerSize'</span>,10);
+    <span class="comment">% Support vectors</span>
+contour(x1Grid,x2Grid,reshape(scores1(:,2),size(x1Grid)),[0 0],<span class="string">'k'</span>, <span class="string">'LineWidth'</span>, 2);
+    <span class="comment">% Decision boundary</span>
+xlabel(<span class="string">'Achol level'</span>)
+ylabel(<span class="string">'Flavanoids'</span>)
+title(<span class="string">'SVM (polynomial kernel)'</span>)
+legend({<span class="string">'1'</span>, <span class="string">'2'</span>, <span class="string">'Support Vectors'</span>},<span class="string">'Location'</span>,<span class="string">'Best'</span>);
+hold <span class="string">off</span>
+</pre><img vspace="5" hspace="5" src="Demo5_ML_SVM_04.png" alt=""> <pre class="codeinput">figure(5)
+SVM = fitcsvm(X, Y,<span class="string">'Standardize'</span>,true, <span class="string">'KernelFunction'</span>,<span class="string">'gaussian'</span>,<span class="string">'Standardize'</span>,true);
+<span class="comment">% Compute the scores over a grid</span>
+d = 0.02; <span class="comment">% Step size of the grid</span>
+[x1Grid,x2Grid] = meshgrid(min(X(:,1)):d:max(X(:,1)),<span class="keyword">...</span>
+    min(X(:,2)):d:max(X(:,2)));
+xGrid = [x1Grid(:),x2Grid(:)];        <span class="comment">% The grid</span>
+[~,scores1] = predict(SVM,xGrid); <span class="comment">% The scores</span>
+h(1:2) = gscatter(X(:,1),X(:,2),Y);
+hold <span class="string">on</span>
+h(3) = plot(X(SVM.IsSupportVector,1),<span class="keyword">...</span>
+    X(SVM.IsSupportVector,2),<span class="string">'ko'</span>,<span class="string">'MarkerSize'</span>,10);
+    <span class="comment">% Support vectors</span>
+contour(x1Grid,x2Grid,reshape(scores1(:,2),size(x1Grid)),[0 0],<span class="string">'k'</span>, <span class="string">'LineWidth'</span>, 2);
+    <span class="comment">% Decision boundary</span>
+xlabel(<span class="string">'Achol level'</span>)
+ylabel(<span class="string">'Flavanoids'</span>)
+title(<span class="string">'SVM (gaussian kernel)'</span>)
+legend({<span class="string">'1'</span>,<span class="string">'2'</span>,<span class="string">'Support Vectors'</span>},<span class="string">'Location'</span>,<span class="string">'Best'</span>);
+hold <span class="string">off</span>
+
+clear <span class="string">d</span> <span class="string">h</span> <span class="string">scores1</span> <span class="string">SVM</span> <span class="string">X</span> <span class="string">x1Grid</span> <span class="string">x2Grid</span> <span class="string">xGrid</span> <span class="string">Y</span>
+</pre><img vspace="5" hspace="5" src="Demo5_ML_SVM_05.png" alt=""> <h2>SVM for three-class classification<a name="6"></a></h2><p>In this section, we also want to use different kernel functions for classification.</p><pre class="codeinput">X = XX;
+Y = YY;
+classNameList = unique(Y);
+SVMs = cell(3,1); <span class="comment">% generate 3 SVM models for three classes</span>
+
+kernelList = {<span class="string">'linear'</span>, <span class="string">'polynomial'</span>, <span class="string">'gaussian'</span>};
+d = 0.02;
+
+<span class="keyword">for</span> k=1:length(kernelList) <span class="comment">% iterate each kernel function</span>
+    <span class="keyword">for</span> i = 1:numel(classNameList)
+        Y_new = Y;
+    id = find(Y_new ~= classNameList(i));
+    Y_new(id) = -1;
+    <span class="comment">% SVMs{i} = fitcsvm(X, Y_new,'ClassNames',[-1 i],'Standardize',true, 'KernelFunction','rbf','BoxConstraint',1);</span>
+
+    SVMs{i} = fitcsvm(X, Y_new,<span class="string">'ClassNames'</span>,[-1 i],<span class="string">'Standardize'</span>,true, <span class="string">'KernelFunction'</span>, kernelList{k}, <span class="string">'BoxConstraint'</span>,1);
+    <span class="keyword">end</span>
+
+
+    [x1Grid,x2Grid] = meshgrid(min(X(:,1)):d:max(X(:,1)), min(X(:,2)):d:max(X(:,2)));
+    xGrid = [x1Grid(:),x2Grid(:)];
+    N = size(xGrid,1);
+    Scores = zeros(N,numel(classNameList));
+
+    <span class="keyword">for</span> i = 1:numel(classNameList);
+        [~, score] = predict(SVMs{i},xGrid);
+        Scores(:,i) = score(:,2); <span class="comment">% Second column contains positive-class scores</span>
+    <span class="keyword">end</span>
+
+    [~,maxScore] = max(Scores,[],2);
+
+    figure(k+5)
+    h(1:3) = gscatter(xGrid(:,1),xGrid(:,2),maxScore, [0.1 0.5 0.5; 0.5 0.1 0.5; 0.5 0.5 0.1]);
+    hold <span class="string">on</span>
+    h(4:6) = gscatter(X(:,1),X(:,2),Y);
+    <span class="comment">%title('{\bf Iris Classification Regions}');</span>
+    <span class="comment">% title(strcat('SVM with ', kernelList{k}))</span>
+    title([<span class="string">'SVM classification with '</span> kernelList{k}  <span class="string">' kernel'</span>]);
+    xlabel(<span class="string">'Achol level'</span>)
+    ylabel(<span class="string">'Flavanoids'</span>)
+    legend(h,{<span class="string">'region for type 1'</span>,<span class="string">'region for type 2'</span>,<span class="string">'region for type 3'</span>, <span class="string">'observed type 1'</span>,<span class="string">'observed type 2'</span>,<span class="string">'observed type 3'</span>},<span class="keyword">...</span>
+    <span class="string">'Location'</span>,<span class="string">'Northwest'</span>);
+    axis <span class="string">tight</span>
+    hold <span class="string">off</span>
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="Demo5_ML_SVM_06.png" alt=""> <img vspace="5" hspace="5" src="Demo5_ML_SVM_07.png" alt=""> <img vspace="5" hspace="5" src="Demo5_ML_SVM_08.png" alt=""> <h2>Website for more information<a name="7"></a></h2><p><a href="http://www.mathworks.com/help/stats/support-vector-machines-svm.html">http://www.mathworks.com/help/stats/support-vector-machines-svm.html</a></p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Support Vector Machine 
+% Author: Erhu Du
+%
+% Supervisor: Neal Davis
+%
+% University of Illinois at Urbana-Champaign
+% 
+% Fall 2015 
+
+%% Load data and select features
+% Data source: Wine data 
+clear all 
+mydata = csvread('data_wine_complete.csv', 1, 0);
+features = mydata(:, 2:end);
+labels = mydata(:, 1);
+figure(1)
+idFeatures = [1 7];
+XX = features(:, idFeatures);
+YY = labels;
+gscatter(XX(:,1),XX(:,2),YY);
+xlabel('Achol level')
+ylabel('Flavanoids')
+title('Scatter Diagram of Wine Data')
+clear features idFeatures labels
+
+%% SVM for binary-class classification 
+% prepare data, select wine type 1 and wine type 2 for SVM fitting 
+figure(2)
+X = XX(1:130, :);
+Y = YY(1:130);
+gscatter(X(:,1), X(:,2), Y);
+xlabel('Achol level')
+ylabel('Flavanoids')
+title('Scatter Diagram of Wine Data')
+
+%% 
+% fit a SVM for classification 
+
+figure(3)
+SVM = fitcsvm(X, Y,'Standardize',true, 'Standardize',true);
+% Compute the scores over a grid
+d = 0.02; % Step size of the grid
+[x1Grid,x2Grid] = meshgrid(min(X(:,1)):d:max(X(:,1)),...
+    min(X(:,2)):d:max(X(:,2)));
+xGrid = [x1Grid(:),x2Grid(:)];        % The grid
+[~,scores1] = predict(SVM,xGrid); % The scores
+h(1:2) = gscatter(X(:,1),X(:,2),Y);
+hold on
+h(3) = plot(X(SVM.IsSupportVector,1),...
+    X(SVM.IsSupportVector,2),'ko','MarkerSize',10);
+    % Support vectors
+contour(x1Grid,x2Grid,reshape(scores1(:,2),size(x1Grid)),[0 0],'k', 'LineWidth', 2);
+    % Decision boundary
+xlabel('Achol level')
+ylabel('Flavanoids')
+title('SVM (linear kernel)')
+legend({'1','2','Support Vectors'},'Location','Best');
+hold off
+
+%% kernel function
+% Sometimes the data cannot be seperated by linear functions. We can use
+% kernel functions instead. Here we choose two types of kernel functions: polynomial and gaussian kernel. 
+%
+% *polynomial kernel function *
+% 
+figure(4)
+SVM = fitcsvm(X, Y,'Standardize',true, 'KernelFunction','polynomial','Standardize',true); % polynomial, gaussian
+% Compute the scores over a grid
+d = 0.02; % Step size of the grid
+[x1Grid,x2Grid] = meshgrid(min(X(:,1)):d:max(X(:,1)),...
+    min(X(:,2)):d:max(X(:,2)));
+xGrid = [x1Grid(:),x2Grid(:)];        % The grid
+[~,scores1] = predict(SVM,xGrid); % The scores
+h(1:2) = gscatter(X(:,1),X(:,2),Y);
+hold on
+h(3) = plot(X(SVM.IsSupportVector,1),...
+    X(SVM.IsSupportVector,2),'ko','MarkerSize',10);
+    % Support vectors
+contour(x1Grid,x2Grid,reshape(scores1(:,2),size(x1Grid)),[0 0],'k', 'LineWidth', 2);
+    % Decision boundary
+xlabel('Achol level')
+ylabel('Flavanoids')
+title('SVM (polynomial kernel)')
+legend({'1', '2', 'Support Vectors'},'Location','Best');
+hold off
+
+%% 
+figure(5)
+SVM = fitcsvm(X, Y,'Standardize',true, 'KernelFunction','gaussian','Standardize',true);
+% Compute the scores over a grid
+d = 0.02; % Step size of the grid
+[x1Grid,x2Grid] = meshgrid(min(X(:,1)):d:max(X(:,1)),...
+    min(X(:,2)):d:max(X(:,2)));
+xGrid = [x1Grid(:),x2Grid(:)];        % The grid
+[~,scores1] = predict(SVM,xGrid); % The scores
+h(1:2) = gscatter(X(:,1),X(:,2),Y);
+hold on
+h(3) = plot(X(SVM.IsSupportVector,1),...
+    X(SVM.IsSupportVector,2),'ko','MarkerSize',10);
+    % Support vectors
+contour(x1Grid,x2Grid,reshape(scores1(:,2),size(x1Grid)),[0 0],'k', 'LineWidth', 2);
+    % Decision boundary
+xlabel('Achol level')
+ylabel('Flavanoids')
+title('SVM (gaussian kernel)')
+legend({'1','2','Support Vectors'},'Location','Best');
+hold off
+
+clear d h scores1 SVM X x1Grid x2Grid xGrid Y
+
+
+%% SVM for three-class classification 
+% In this section, we also want to use different kernel functions for
+% classification. 
+X = XX;
+Y = YY;
+classNameList = unique(Y);
+SVMs = cell(3,1); % generate 3 SVM models for three classes 
+
+kernelList = {'linear', 'polynomial', 'gaussian'};
+d = 0.02; 
+
+for k=1:length(kernelList) % iterate each kernel function 
+    for i = 1:numel(classNameList)
+        Y_new = Y;
+    id = find(Y_new ~= classNameList(i));
+    Y_new(id) = -1;
+    % SVMs{i} = fitcsvm(X, Y_new,'ClassNames',[-1 i],'Standardize',true, 'KernelFunction','rbf','BoxConstraint',1);
+    
+    SVMs{i} = fitcsvm(X, Y_new,'ClassNames',[-1 i],'Standardize',true, 'KernelFunction', kernelList{k}, 'BoxConstraint',1);
+    end
+        
+    
+    [x1Grid,x2Grid] = meshgrid(min(X(:,1)):d:max(X(:,1)), min(X(:,2)):d:max(X(:,2)));
+    xGrid = [x1Grid(:),x2Grid(:)];
+    N = size(xGrid,1);
+    Scores = zeros(N,numel(classNameList));
+
+    for i = 1:numel(classNameList);
+        [~, score] = predict(SVMs{i},xGrid);
+        Scores(:,i) = score(:,2); % Second column contains positive-class scores
+    end
+
+    [~,maxScore] = max(Scores,[],2);
+
+    figure(k+5)
+    h(1:3) = gscatter(xGrid(:,1),xGrid(:,2),maxScore, [0.1 0.5 0.5; 0.5 0.1 0.5; 0.5 0.5 0.1]);
+    hold on
+    h(4:6) = gscatter(X(:,1),X(:,2),Y);
+    %title('{\bf Iris Classification Regions}');
+    % title(strcat('SVM with ', kernelList{k}))
+    title(['SVM classification with ' kernelList{k}  ' kernel']);
+    xlabel('Achol level')
+    ylabel('Flavanoids')
+    legend(h,{'region for type 1','region for type 2','region for type 3', 'observed type 1','observed type 2','observed type 3'},...
+    'Location','Northwest');
+    axis tight
+    hold off
+end 
+
+
+%% Website for more information 
+% http://www.mathworks.com/help/stats/support-vector-machines-svm.html
+
+
+
+##### SOURCE END #####
+--></body></html>
